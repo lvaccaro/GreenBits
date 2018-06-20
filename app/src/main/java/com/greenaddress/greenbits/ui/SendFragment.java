@@ -362,10 +362,8 @@ public class SendFragment extends SubaccountFragment {
         if (GaService.IS_ELEMENTS)
             return; // FIXME: No custom fees for elements
 
-        // Make the dropdown exclude instant if not available
         final GaService service = getGAService();
-        final boolean is2of3 = service.findSubaccountByType(mSubaccount, "2of3") != null;
-        final int id = is2of3 ? R.array.send_fee_target_choices : R.array.send_fee_target_choices_instant;
+        final int id = R.array.send_fee_target_choices;
         final ArrayAdapter<CharSequence> a;
         a = ArrayAdapter.createFromResource(getActivity(), id, android.R.layout.simple_spinner_item);
         a.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -604,9 +602,6 @@ public class SendFragment extends SubaccountFragment {
         if (mSubaccount != 0)
             privateData.mData.put("subaccount", mSubaccount);
 
-        final UI.FEE_TARGET feeTarget = UI.FEE_TARGET_VALUES[mFeeTargetCombo.getSelectedItemPosition()];
-        if (feeTarget.equals(UI.FEE_TARGET.INSTANT))
-            privateData.mData.put("instant", true);
 
         final Coin amount;
         final String recipient;
@@ -653,9 +648,7 @@ public class SendFragment extends SubaccountFragment {
 
         UI.disable(mSendButton);
         final int numConfs;
-        if (feeTarget.equals(UI.FEE_TARGET.INSTANT))
-            numConfs = 6; // Instant requires at least 6 confs
-        else if (Network.NETWORK == MainNetParams.get())
+        if (Network.NETWORK == MainNetParams.get())
             numConfs = 1; // Require 1 conf before spending on mainnet
         else
             numConfs = 0; // Allow 0 conf for networks with no real-world value
@@ -667,6 +660,7 @@ public class SendFragment extends SubaccountFragment {
         final boolean minimizeInputs = is2Of3;
         final boolean filterAsset = true;
 
+        final UI.FEE_TARGET feeTarget = UI.FEE_TARGET_VALUES[mFeeTargetCombo.getSelectedItemPosition()];
         final Coin feeRate;
         try {
             final String userRate = UI.getText(mFeeTargetEdit);
@@ -686,7 +680,6 @@ public class SendFragment extends SubaccountFragment {
             } else
                 feeRate = getFeeRate(feeTarget);
         } catch (final GAException e) {
-            gaActivity.toast(R.string.instantUnavailable, mSendButton);
             return;
         }
 
@@ -724,8 +717,8 @@ public class SendFragment extends SubaccountFragment {
         if (GaService.IS_ELEMENTS)
             forBlock = 6; // FIXME: feeTarget for elements
         else
-            forBlock = feeTarget.equals(UI.FEE_TARGET.INSTANT) ? 1 : feeTarget.getBlock();
-        return GATx.getFeeEstimate(getGAService(), feeTarget.equals(UI.FEE_TARGET.INSTANT), forBlock);
+            forBlock = feeTarget.getBlock();
+        return GATx.getFeeEstimate(getGAService(), forBlock);
     }
 
     private int createRawTransaction(final List<JSONMap> utxos, final String recipient,
