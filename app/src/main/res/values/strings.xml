@@ -102,7 +102,6 @@
         <item>Bitcoin</item>
         <item>Testnet3</item>
         <item>Liquid</item>
-        <item>Custom</item>
     </string-array>
 
     <string name="custom_requires_rbf">Custom fees require transaction replacement functionality to be enabled.</string>

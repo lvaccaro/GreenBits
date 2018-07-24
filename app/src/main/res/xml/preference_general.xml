@@ -17,10 +17,6 @@
         android:key="denomination_key"
         android:title="@string/settings_denomination" />
 
-    <MultiSelectListPreference
-        android:key="network_selector"
-        android:title="Network selector" />
-
     <CheckBoxPreference
         android:key="show_balance_in_title"
         android:title="@string/show_balance_in_title"

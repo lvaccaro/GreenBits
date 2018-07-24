@@ -23,4 +23,18 @@
         android:dependency="proxy_host"
         android:title="@string/enableTor" />
 
+    <MultiSelectListPreference
+        android:key="network_selector"
+        android:title="Network selector" />
+
+    <EditTextPreference
+        android:key="custom_networks_add"
+        android:title="Add custom network URL"
+        android:inputType="textUri" />
+
+    <ListPreference
+        android:key="custom_networks_remove"
+        android:title="Remove custom network URL"
+        />
+
 </PreferenceScreen>
