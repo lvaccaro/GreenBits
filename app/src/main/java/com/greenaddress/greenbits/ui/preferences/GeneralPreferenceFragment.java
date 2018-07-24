@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
+import android.preference.MultiSelectListPreference;
 import android.preference.Preference;
 import android.util.Log;
 import android.view.View;
@@ -13,6 +14,7 @@ import android.widget.Toast;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.google.common.base.Joiner;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.greenaddress.greenbits.GaService;
@@ -22,7 +24,9 @@ import com.greenaddress.greenbits.ui.R;
 import com.greenaddress.greenbits.ui.UI;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class GeneralPreferenceFragment extends GAPreferenceFragment
     implements Preference.OnPreferenceClickListener {
@@ -112,6 +116,19 @@ public class GeneralPreferenceFragment extends GAPreferenceFragment
             });
             bitcoinDenomination.setSummary(mService.getBitcoinUnit());
         }
+
+        // Network selector
+        final MultiSelectListPreference networkSelector = find("network_selector");
+        networkSelector.setEntries(R.array.available_networks);
+        networkSelector.setEntryValues(R.array.available_networks);
+        networkSelector.setOnPreferenceChangeListener((preference, selectedPreferencesObject) -> {
+            final Set<String> selectedPreferences = (Set<String>) selectedPreferencesObject;
+            networkSelector.setSummary( Joiner.on(", ").join(selectedPreferences) );
+            return true;
+        });
+        final Set<String> selectedPreferences = mService.cfg().getStringSet("network_selector", new HashSet<>());
+        networkSelector.setSummary( Joiner.on(", ").join(selectedPreferences) );
+
 
         final ListPreference fiatCurrency = find("fiat_key");
         if (GaService.IS_ELEMENTS)

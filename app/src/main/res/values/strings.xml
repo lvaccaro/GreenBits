@@ -98,6 +98,12 @@
         <item>Custom</item>
         <item>Instant</item>
     </string-array>
+    <string-array name="available_networks">
+        <item>Bitcoin</item>
+        <item>Testnet3</item>
+        <item>Liquid</item>
+        <item>Custom</item>
+    </string-array>
 
     <string name="custom_requires_rbf">Custom fees require transaction replacement functionality to be enabled.</string>
     <string name="default_custom_feerate">Default custom feerate</string>
