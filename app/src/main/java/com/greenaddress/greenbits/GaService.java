@@ -83,11 +83,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
@@ -417,6 +419,11 @@ public class GaService extends Service implements INotificationHandler {
             // Generate a unique device id
             mDeviceId = UUID.randomUUID().toString();
             cfgEdit("service").putString("device_id", mDeviceId).apply();
+        }
+        final Set<String> networkSelector = cfg().getStringSet("network_selector", new HashSet<>());
+        if (networkSelector.isEmpty()) {
+            networkSelector.add("Bitcoin");
+            cfg().edit().putStringSet("network_selector", networkSelector).apply();
         }
 
         mClient = new WalletClient(this, mExecutor);

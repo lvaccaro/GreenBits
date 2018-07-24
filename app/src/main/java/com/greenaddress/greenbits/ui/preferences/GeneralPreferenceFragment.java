@@ -123,6 +123,11 @@ public class GeneralPreferenceFragment extends GAPreferenceFragment
         networkSelector.setEntryValues(R.array.available_networks);
         networkSelector.setOnPreferenceChangeListener((preference, selectedPreferencesObject) -> {
             final Set<String> selectedPreferences = (Set<String>) selectedPreferencesObject;
+            if (selectedPreferences.isEmpty()) {
+                UI.toast(getActivity(), "Cannot select any network. selecting Bitcoin by default", Toast.LENGTH_LONG);
+                selectedPreferences.add("Bitcoin");
+                mService.cfg().edit().putStringSet("network_selector", selectedPreferences).apply();
+            }
             networkSelector.setSummary( Joiner.on(", ").join(selectedPreferences) );
             return true;
         });
