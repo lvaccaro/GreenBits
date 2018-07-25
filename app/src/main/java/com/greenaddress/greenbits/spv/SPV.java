@@ -47,6 +47,7 @@ import org.bitcoinj.core.listeners.DownloadProgressTracker;
 import org.bitcoinj.core.listeners.TransactionReceivedInBlockListener;
 import org.bitcoinj.net.BlockingClientManager;
 import org.bitcoinj.net.discovery.DnsDiscovery;
+import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.store.BlockStore;
 import org.bitcoinj.store.BlockStoreException;
@@ -666,12 +667,14 @@ public class SPV {
                 if (storedBlock.getHeight() == 0 && Network.NETWORK != RegTestParams.get()) {
                     InputStream is = null;
                     try {
-                        is = mService.getAssets().open("checkpoints");
+                        is = mService.getAssets().open( Network.NETWORK == MainNetParams.get() ? "production/checkpoints" : "btctestnet/checkpoints");
                         final int keyTime = mService.getLoginData().get("earliest_key_creation_time");
                         CheckpointManager.checkpoint(Network.NETWORK, is,
                                                      mBlockStore, keyTime);
+                        Log.d(TAG, "checkpoints loaded");
                     } catch (final IOException e) {
                         // couldn't load checkpoints, log & skip
+                        Log.d(TAG, "couldn't load checkpoints, log & skip");
                         e.printStackTrace();
                     } finally {
                         try {
