@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.security.keystore.KeyProperties;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
@@ -19,6 +20,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.AsyncFunction;
@@ -291,29 +293,38 @@ public class PinActivity extends LoginActivity implements Observer, View.OnClick
 
         final Set<String> networkSelector = mService.cfg().getStringSet("network_selector", new HashSet<>());
         if (networkSelector.size()>1) {
-            final MaterialDialog materialDialog = popupNetworkChoose(this, mService, arg -> {
-                //TODO handle logic to use arg as the active network
-            });
+            final Set<String> networkSelectorSet = mService.cfg().getStringSet("network_selector", new HashSet<>());
+            final List<String> networkSelectorList = new ArrayList<>(networkSelectorSet);
+            Collections.sort(networkSelectorList);
+
+            final MaterialDialog materialDialog = UI.popup(this, R.string.select_network, R.string.choose, R.string.choose_and_default)
+                    .items(networkSelectorList)
+                    .itemsCallbackSingleChoice(0, (dialog, v, which, text) -> {
+
+                        selectedNetwork(text.toString(), false);
+                        return true;
+                    })
+                    .onNegative((dialog, which) -> {
+                        selectedNetwork(networkSelectorList.get(dialog.getSelectedIndex()), true);
+
+                    })
+                    .build();
+
             materialDialog.show();
         }
         super.onResumeWithService();
     }
 
-    public static MaterialDialog popupNetworkChoose(final Activity a, final GaService mService, final CB.Runnable1T<String> callback) {
-        final Set<String> networkSelectorSet = mService.cfg().getStringSet("network_selector", new HashSet<>());
-        final List<String> networkSelectorList = new ArrayList<>(networkSelectorSet);
-        Collections.sort(networkSelectorList);
-
-        return UI.popup(a, R.string.select_network, R.string.choose, R.string.choose_and_default)
-                .items(networkSelectorList)
-                .itemsCallbackSingleChoice(0, new MaterialDialog.ListCallbackSingleChoice() {
-                    @Override
-                    public boolean onSelection(final MaterialDialog dialog, final View v, final int which, final CharSequence text) {
-                        callback.run(networkSelectorList.get(which));
-                        return true;
-                    }
-                }).build();
+    private void selectedNetwork(String which, boolean b) {
+        Log.i("TAG", "which " + which + " default:" + b);
+        if (b) {
+            Set<String> networkSelectorNew = new HashSet<>();
+            networkSelectorNew.add(which);
+            mService.cfg().edit().putStringSet("network_selector", networkSelectorNew).apply();
+        }
+        //TODO handle network activation
     }
+
 
     @Override
     public void onPauseWithService() {
