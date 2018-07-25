@@ -9,6 +9,7 @@ import android.preference.ListPreference;
 import android.preference.MultiSelectListPreference;
 import android.preference.Preference;
 import android.util.Log;
+import android.webkit.URLUtil;
 import android.widget.Toast;
 
 import com.google.common.base.Joiner;
@@ -16,9 +17,11 @@ import com.greenaddress.greenapi.Network;
 import com.greenaddress.greenbits.ui.R;
 import com.greenaddress.greenbits.ui.UI;
 
-
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -74,6 +77,7 @@ public class NetworkPreferenceFragment extends GAPreferenceFragment {
                 mService.cfg().edit().putStringSet("network_selector", selectedPreferences).apply();
             }
             networkSelector.setSummary( Joiner.on(", ").join(selectedPreferences) );
+
             return true;
         });
         final Set<String> selectedPreferences = mService.cfg().getStringSet("network_selector", new HashSet<>());
@@ -84,41 +88,58 @@ public class NetworkPreferenceFragment extends GAPreferenceFragment {
         networkCustomRemove.setEntries(entries);
         networkCustomRemove.setEntryValues(entries);
         networkCustomRemove.setOnPreferenceChangeListener((preference, newValue) -> {
-            final Set<String> customNetworksNow = mService.cfg().getStringSet("custom_networks", new HashSet<>());
-            Log.w(TAG, "customNetworks1: " + customNetworksNow);
-            customNetworksNow.remove(newValue);
-            Log.w(TAG, "customNetworks2: " + customNetworksNow);
-            syncCustomNetworks(networkCustomRemove, networkSelector, customNetworksNow);
+            final Set<String> customNetworksNew = mService.cfg().getStringSet("custom_networks", new HashSet<>());
+            customNetworksNew.remove(newValue);
+            final Set<String> networkSelectorPreferences = mService.cfg().getStringSet("network_selector", new HashSet<>());
+            if (networkSelectorPreferences.contains(newValue)) {
+                networkSelectorPreferences.remove(newValue);
+                mService.cfg().edit()
+                        .putStringSet("network_selector", networkSelectorPreferences)
+                        .apply();
+                networkSelector.setSummary( Joiner.on(", ").join(networkSelectorPreferences) );
 
-            return false;
+            }
+            syncCustomNetworks(networkCustomRemove, networkSelector, customNetworksNew);
+
+            return true;
         });
 
         final EditTextPreference networkCustomAdd = find("custom_networks_add");
         networkCustomAdd.setOnPreferenceChangeListener((preference, newValue) -> {
-            //TODO check newValue is URL
-            final Set<String> customNetworksNow = mService.cfg().getStringSet("custom_networks", new HashSet<>());
-            customNetworksNow.add(newValue.toString());
-            Log.w(TAG, "customNetworks: " + customNetworksNow);
-            syncCustomNetworks(networkCustomRemove, networkSelector, customNetworksNow);
+            if (URLUtil.isValidUrl(newValue.toString())) {
+                final Set<String> customNetworksNew = mService.cfg().getStringSet("custom_networks", new HashSet<>());
+                if (customNetworksNew.contains(newValue.toString())) {
+                    UI.toast(getActivity(), "Custom URL already present", Toast.LENGTH_LONG);
+                } else {
+                    customNetworksNew.add(newValue.toString());
+                    syncCustomNetworks(networkCustomRemove, networkSelector, customNetworksNew);
+                    UI.toast(getActivity(), "Custom URL added, enable it in the Network selector chooser", Toast.LENGTH_LONG);
+                }
+            } else {
+                UI.toast(getActivity(), "Not a valid URL", Toast.LENGTH_LONG);
+            }
 
-            return false;
+            return true;
         });
 
         syncCustomNetworks(networkCustomRemove, networkSelector, customNetworks);
 
     }
 
-    private void syncCustomNetworks(ListPreference networkCustomRemove, MultiSelectListPreference networkSelector, Set<String> customNetworksNow) {
+    private void syncCustomNetworks(ListPreference networkCustomRemove, MultiSelectListPreference networkSelector, Set<String> customNetworksNew) {
         mService.cfg().edit()
-                .putStringSet("custom_networks", customNetworksNow)
+                .putStringSet("custom_networks", customNetworksNew)
                 .apply();
-        final String[] entriesNow = customNetworksNow.toArray(new String[customNetworksNow.size()]);
+        final List<String> customNetworksNewList = new ArrayList<>(customNetworksNew);
+        Collections.sort(customNetworksNewList);
+        final String[] entriesNow = customNetworksNewList.toArray(new String[customNetworksNewList.size()]);
         networkCustomRemove.setEntries(entriesNow);
         networkCustomRemove.setEntryValues(entriesNow);
 
         final String[] standardNetworks = getResources().getStringArray(R.array.available_networks);
-        final Set<String> standardAndCustomNetworks = new HashSet<>(customNetworksNow);
+        final List<String> standardAndCustomNetworks = new ArrayList<>();
         standardAndCustomNetworks.addAll( Arrays.asList(standardNetworks) );
+        standardAndCustomNetworks.addAll( customNetworksNewList );
 
         final String[] standardAndCustomNetworksArray = standardAndCustomNetworks.toArray(new String[standardAndCustomNetworks.size()]);
         networkSelector.setEntries(standardAndCustomNetworksArray);

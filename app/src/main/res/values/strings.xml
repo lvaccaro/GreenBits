@@ -407,4 +407,5 @@
     <string name="twofactor_reset_disputed_banner">WARNING: Wallet locked by two factor dispute. Contact support for more information.</string>
     <string name="twofactor_reset_complete">Reset successful, your wallet is now locked.</string>
     <string name="twofactor_reset_cancelled">Reset cancelled, your wallet is now unlocked.</string>
+    <string name="select_network">Select network</string>
 </resources>

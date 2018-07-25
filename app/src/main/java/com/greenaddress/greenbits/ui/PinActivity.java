@@ -1,6 +1,7 @@
 package com.greenaddress.greenbits.ui;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.app.KeyguardManager;
 import android.content.Context;
 import android.content.Intent;
@@ -10,12 +11,15 @@ import android.os.Bundle;
 import android.security.keystore.KeyProperties;
 import android.text.TextUtils;
 import android.util.Base64;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.FutureCallback;
@@ -35,8 +39,14 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Set;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -166,6 +176,8 @@ public class PinActivity extends LoginActivity implements Observer, View.OnClick
             return;
         }
 
+
+
         setContentView(R.layout.activity_pin);
         mPinLoginButton = UI.find(this, R.id.pinLoginButton);
         mPinText = UI.find(this, R.id.pinText);
@@ -276,7 +288,31 @@ public class PinActivity extends LoginActivity implements Observer, View.OnClick
     @Override
     public void onResumeWithService() {
         mService.addConnectionObserver(this);
+
+        final Set<String> networkSelector = mService.cfg().getStringSet("network_selector", new HashSet<>());
+        if (networkSelector.size()>1) {
+            final MaterialDialog materialDialog = popupNetworkChoose(this, mService, arg -> {
+                //TODO handle logic to use arg as the active network
+            });
+            materialDialog.show();
+        }
         super.onResumeWithService();
+    }
+
+    public static MaterialDialog popupNetworkChoose(final Activity a, final GaService mService, final CB.Runnable1T<String> callback) {
+        final Set<String> networkSelectorSet = mService.cfg().getStringSet("network_selector", new HashSet<>());
+        final List<String> networkSelectorList = new ArrayList<>(networkSelectorSet);
+        Collections.sort(networkSelectorList);
+
+        return UI.popup(a, R.string.select_network, R.string.choose, UI.INVALID_RESOURCE_ID)
+                .items(networkSelectorList)
+                .itemsCallbackSingleChoice(0, new MaterialDialog.ListCallbackSingleChoice() {
+                    @Override
+                    public boolean onSelection(final MaterialDialog dialog, final View v, final int which, final CharSequence text) {
+                        callback.run(networkSelectorList.get(which));
+                        return true;
+                    }
+                }).build();
     }
 
     @Override
