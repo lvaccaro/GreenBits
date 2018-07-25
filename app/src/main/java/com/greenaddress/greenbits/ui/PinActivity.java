@@ -304,7 +304,7 @@ public class PinActivity extends LoginActivity implements Observer, View.OnClick
         final List<String> networkSelectorList = new ArrayList<>(networkSelectorSet);
         Collections.sort(networkSelectorList);
 
-        return UI.popup(a, R.string.select_network, R.string.choose, UI.INVALID_RESOURCE_ID)
+        return UI.popup(a, R.string.select_network, R.string.choose, R.string.choose_and_default)
                 .items(networkSelectorList)
                 .itemsCallbackSingleChoice(0, new MaterialDialog.ListCallbackSingleChoice() {
                     @Override
