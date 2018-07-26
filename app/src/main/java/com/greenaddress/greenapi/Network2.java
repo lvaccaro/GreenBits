@@ -7,7 +7,10 @@ import org.bitcoinj.params.TestNet3Params;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +30,12 @@ public class Network2 {
     private String gaitOnion;
     private List<String> defaultPeers;
 
-    public Network2(final String json) {
+    public static Network2 from(final String json) {
+        InputStream stream = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8));
+        return new Network2(stream);
+    }
+
+    public Network2(final InputStream json) {
 
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);

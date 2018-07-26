@@ -320,12 +320,15 @@ public class PinActivity extends LoginActivity implements Observer, View.OnClick
 
     private void selectedNetwork(String which, boolean b) {
         Log.i("TAG", "which " + which + " default:" + b);
+        final SharedPreferences.Editor editor = mService.cfg().edit();
         if (b) {
             Set<String> networkSelectorNew = new HashSet<>();
             networkSelectorNew.add(which);
-            mService.cfg().edit().putStringSet("network_selector", networkSelectorNew).apply();
+            editor.putStringSet("network_selector", networkSelectorNew);
         }
-        //TODO handle network activation
+        editor.putString("network_selected", which);
+        editor.apply();
+        mService.updateSelectedNetwork();
     }
 
 

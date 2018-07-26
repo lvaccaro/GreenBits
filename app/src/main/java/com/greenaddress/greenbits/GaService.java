@@ -41,6 +41,7 @@ import com.greenaddress.greenapi.ISigningWallet;
 import com.greenaddress.greenapi.JSONMap;
 import com.greenaddress.greenapi.LoginData;
 import com.greenaddress.greenapi.Network;
+import com.greenaddress.greenapi.Network2;
 import com.greenaddress.greenapi.Output;
 import com.greenaddress.greenapi.PinData;
 import com.greenaddress.greenapi.PreparedTransaction;
@@ -109,6 +110,12 @@ public class GaService extends Service implements INotificationHandler {
     public static final int LOGOFF_NORMAL_CLOSE = 1000;
     public static final int LOGOFF_SERVER_RESTART = 1006;
     public static final int LOGOFF_BY_USER_RECONNECT = 9999;
+
+    private Network2 network;
+
+    public Network2 getNetwork() {
+        return network;
+    }
 
     private enum ConnState {
         OFFLINE, DISCONNECTED, CONNECTING, CONNECTED, LOGGINGIN, LOGGEDIN
@@ -428,6 +435,26 @@ public class GaService extends Service implements INotificationHandler {
         }
 
         mClient = new WalletClient(this, mExecutor);
+
+        updateSelectedNetwork();
+    }
+
+    public void updateSelectedNetwork() {
+        final String selectedNetwork = cfg().getString("network_selected", "Bitcoin");
+        Log.i(TAG,"updateSelectedNetwork to " + selectedNetwork);
+
+        try {
+            if("Bitcoin".equals(selectedNetwork)) {
+                network = new Network2(getAssets().open("production/config.json"));
+            } else if("Testnet3".equals(selectedNetwork)) {
+                network = new Network2(getAssets().open("btctestnet/config.json"));
+            } else {
+                throw new RuntimeException("asfasg");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Log.i(TAG, "network is "+ network);
     }
 
     @Override
