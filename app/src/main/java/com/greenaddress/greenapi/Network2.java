@@ -18,9 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by Riccardo Casatta @RCasatta on 26/07/18.
- */
 public class Network2 {
     private String name;
     private NetworkParameters networkParameters;

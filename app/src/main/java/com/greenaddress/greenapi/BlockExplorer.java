@@ -1,8 +1,5 @@
 package com.greenaddress.greenapi;
 
-/**
- * Created by Riccardo Casatta @RCasatta on 26/07/18.
- */
 public class BlockExplorer {
     private String address;
     private String tx;

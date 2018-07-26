@@ -24,10 +24,12 @@ public class SWWallet extends ISigningWallet {
     public SWWallet(final String mnemonic, final Network2 network) {
         final byte[] seed = CryptoHelper.mnemonic_to_seed(mnemonic);
         mRootKey = HDKey.createMasterKeyFromSeed(seed);
+        mNetwork = network;
     }
 
     public SWWallet(final DeterministicKey key, final Network2 network) {
         mRootKey = key;
+        mNetwork = network;
     }
 
     private SWWallet derive(final Integer childNumber) {
@@ -68,8 +70,7 @@ public class SWWallet extends ISigningWallet {
 
     @Override
     public Object[] getChallengeArguments() {
-
-        return new Object[0];
+        return getChallengeArguments(mNetwork.getNetworkParameters());
     }
 
     public Object[] getChallengeArguments(final NetworkParameters params) {
