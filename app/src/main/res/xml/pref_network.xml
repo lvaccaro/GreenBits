@@ -32,9 +32,14 @@
         android:title="Add custom network URL"
         android:inputType="textUri" />
 
+    <Preference
+        android:key="custom_networks_add_qr"
+        android:title="Add custom network QR code"
+        />
+
     <ListPreference
         android:key="custom_networks_remove"
-        android:title="Remove custom network URL"
+        android:title="Remove custom network"
         />
 
 </PreferenceScreen>

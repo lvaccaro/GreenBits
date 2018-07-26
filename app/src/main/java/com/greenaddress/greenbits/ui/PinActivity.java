@@ -291,6 +291,9 @@ public class PinActivity extends LoginActivity implements Observer, View.OnClick
     public void onResumeWithService() {
         mService.addConnectionObserver(this);
 
+
+
+
         final Set<String> networkSelector = mService.cfg().getStringSet("network_selector", new HashSet<>());
         if (networkSelector.size()>1) {
             final Set<String> networkSelectorSet = mService.cfg().getStringSet("network_selector", new HashSet<>());

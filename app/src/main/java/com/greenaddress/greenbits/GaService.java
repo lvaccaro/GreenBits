@@ -230,6 +230,7 @@ public class GaService extends Service implements INotificationHandler {
 
     public File getSPVChainFile() {
         final String dirName = "blockstore_" + mReceivingId;
+        Log.i(TAG, "dirName:" + dirName);
         return new File(getDir(dirName, Context.MODE_PRIVATE), "blockchain.spvchain");
     }
 
