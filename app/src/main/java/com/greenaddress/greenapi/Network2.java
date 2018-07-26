@@ -1,6 +1,14 @@
 package com.greenaddress.greenapi;
 
-import java.util.Arrays;
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.params.MainNetParams;
+import org.bitcoinj.params.RegTestParams;
+import org.bitcoinj.params.TestNet3Params;
+import org.codehaus.jackson.map.DeserializationConfig;
+import org.codehaus.jackson.map.ObjectMapper;
+
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -9,18 +17,46 @@ import java.util.Map;
  */
 public class Network2 {
     private String name;
-    private String network;  //NO
+    private NetworkParameters network;
     private boolean liquid;
     private String gaitWampUrl;
-    private String[] gaitWampCertPins;
+    private List<String> gaitWampCertPins;
     private List<BlockExplorer> blockExplorers;
     private String depositPubkey;
     private String depositChainCode;
     private String gaitOnion;
-    private String[] defaultPeers;
+    private List<String> defaultPeers;
 
-    public Network2(Map<String,Object> map) {
-        name = map.get("name").toString();
+    public Network2(final String json) {
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        try {
+            final Map map = objectMapper.readValue(json, Map.class);
+            name = map.get("name").toString();
+            final Object network = map.get("network");
+            switch (network == null ? "mainnet" : network.toString()) {
+                case "mainnet" : this.network = MainNetParams.get(); break;
+                case "testnet" : this.network = TestNet3Params.get(); break;
+                case "regtest" : this.network = RegTestParams.get(); break;
+            }
+            final Object liquid = map.get("liquid");
+            this.liquid = liquid==null ? false : (boolean) liquid;
+            gaitWampUrl = map.get("gait_wamp_url").toString();
+            gaitWampCertPins = (List<String>) map.get("gait_wamp_cert_pins");
+
+            blockExplorers = new ArrayList<>();
+            for (Map<String,Object> m : (List<Map<String,Object>>) map.get("blockexplorers")) {
+                blockExplorers.add(new BlockExplorer(m.get("address").toString(), m.get("tx").toString()));
+            }
+            depositPubkey = map.get("deposit_pubkey").toString();
+            depositChainCode = map.get("deposit_chain_code").toString();
+            gaitOnion = map.get("gait_onion").toString();
+            defaultPeers =  map.get("default_peers") == null ? new ArrayList<>() : (List<String>) map.get("default_peers") ;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -30,12 +66,12 @@ public class Network2 {
                 ", network='" + network + '\'' +
                 ", liquid=" + liquid +
                 ", gaitWampUrl='" + gaitWampUrl + '\'' +
-                ", gaitWampCertPins=" + Arrays.toString(gaitWampCertPins) +
+                ", gaitWampCertPins=" + gaitWampCertPins +
                 ", blockExplorers=" + blockExplorers +
                 ", depositPubkey='" + depositPubkey + '\'' +
                 ", depositChainCode='" + depositChainCode + '\'' +
                 ", gaitOnion='" + gaitOnion + '\'' +
-                ", defaultPeers=" + Arrays.toString(defaultPeers) +
+                ", defaultPeers=" + defaultPeers +
                 '}';
     }
 
@@ -43,7 +79,7 @@ public class Network2 {
         return name;
     }
 
-    public String getNetwork() {
+    public NetworkParameters getNetwork() {
         return network;
     }
 
@@ -55,7 +91,7 @@ public class Network2 {
         return gaitWampUrl;
     }
 
-    public String[] getGaitWampCertPins() {
+    public List<String> getGaitWampCertPins() {
         return gaitWampCertPins;
     }
 
@@ -75,7 +111,7 @@ public class Network2 {
         return gaitOnion;
     }
 
-    public String[] getDefaultPeers() {
+    public List<String> getDefaultPeers() {
         return defaultPeers;
     }
 }

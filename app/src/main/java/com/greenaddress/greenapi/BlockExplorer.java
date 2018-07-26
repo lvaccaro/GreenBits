@@ -19,4 +19,12 @@ class BlockExplorer {
     public String getTx() {
         return tx;
     }
+
+    @Override
+    public String toString() {
+        return "BlockExplorer{" +
+                "address='" + address + '\'' +
+                ", tx='" + tx + '\'' +
+                '}';
+    }
 }
