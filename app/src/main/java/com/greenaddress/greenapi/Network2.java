@@ -1,5 +1,8 @@
 package com.greenaddress.greenapi;
 
+import com.blockstream.libwally.Wally;
+import com.greenaddress.greenbits.ui.BuildConfig;
+
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
@@ -20,7 +23,7 @@ import java.util.Map;
  */
 public class Network2 {
     private String name;
-    private NetworkParameters network;
+    private NetworkParameters networkParameters;
     private boolean liquid;
     private String gaitWampUrl;
     private List<String> gaitWampCertPins;
@@ -43,14 +46,25 @@ public class Network2 {
         try {
             final Map map = objectMapper.readValue(json, Map.class);
             name = map.get("name").toString();
-            final Object network = map.get("network");
-            switch (network == null ? "mainnet" : network.toString()) {
-                case "mainnet" : this.network = MainNetParams.get(); break;
-                case "testnet" : this.network = TestNet3Params.get(); break;
-                case "regtest" : this.network = RegTestParams.get(); break;
-            }
+
             final Object liquid = map.get("liquid");
             this.liquid = liquid==null ? false : (boolean) liquid;
+            if(this.liquid) {
+                this.networkParameters = ElementsRegTestParams.get();
+            } else {
+                final Object network = map.get("network");
+                switch (network == null ? "mainnet" : network.toString()) {
+                    case "mainnet":
+                        this.networkParameters = MainNetParams.get();
+                        break;
+                    case "testnet":
+                        this.networkParameters = TestNet3Params.get();
+                        break;
+                    case "regtest":
+                        this.networkParameters = RegTestParams.get();
+                        break;
+                }
+            }
             gaitWampUrl = map.get("gait_wamp_url").toString();
             gaitWampCertPins = (List<String>) map.get("gait_wamp_cert_pins");
 
@@ -67,11 +81,38 @@ public class Network2 {
         }
     }
 
+    public boolean isElements() {
+        return networkParameters == ElementsRegTestParams.get();
+    }
+    public boolean isMainnet() {
+        return networkParameters == MainNetParams.get();
+    }
+    public boolean isRegtest() { return networkParameters == RegTestParams.get(); }
+
+    public int getBip32Network() {
+        return isMainnet() ? Wally.BIP38_KEY_MAINNET : Wally.BIP38_KEY_TESTNET;
+    }
+    public int getBip38Flags() {
+        return getBip32Network() | Wally.BIP38_KEY_COMPRESSED;
+    }
+    public boolean alwaysAllowRBF() {
+        return BuildConfig.DEBUG && isRegtest();
+    }
+    public BlockExplorer getFirstBlockExplorer() {
+        return blockExplorers.get(0);
+    }
+    public int getVerPublic() {
+        return isMainnet() ? Wally.BIP32_VER_MAIN_PUBLIC : Wally.BIP32_VER_TEST_PUBLIC;
+    }
+    public int getVerPrivate() {
+        return isMainnet() ? Wally.BIP32_VER_MAIN_PRIVATE : Wally.BIP32_VER_TEST_PRIVATE;
+    }
+
     @Override
     public String toString() {
         return "Network2{" +
                 "name='" + name + '\'' +
-                ", network='" + network + '\'' +
+                ", networkParameters='" + networkParameters + '\'' +
                 ", liquid=" + liquid +
                 ", gaitWampUrl='" + gaitWampUrl + '\'' +
                 ", gaitWampCertPins=" + gaitWampCertPins +
@@ -87,8 +128,8 @@ public class Network2 {
         return name;
     }
 
-    public NetworkParameters getNetwork() {
-        return network;
+    public NetworkParameters getNetworkParameters() {
+        return networkParameters;
     }
 
     public boolean isLiquid() {
@@ -99,8 +140,8 @@ public class Network2 {
         return gaitWampUrl;
     }
 
-    public List<String> getGaitWampCertPins() {
-        return gaitWampCertPins;
+    public String[] getGaitWampCertPins() {
+        return gaitWampCertPins.toArray(new String[gaitWampCertPins.size()]);
     }
 
     public List<BlockExplorer> getBlockExplorers() {

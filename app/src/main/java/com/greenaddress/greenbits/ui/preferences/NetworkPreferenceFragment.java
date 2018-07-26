@@ -15,7 +15,6 @@ import android.webkit.URLUtil;
 import android.widget.Toast;
 
 import com.google.common.base.Joiner;
-import com.greenaddress.greenapi.Network;
 import com.greenaddress.greenbits.ui.R;
 import com.greenaddress.greenbits.ui.UI;
 
@@ -57,10 +56,10 @@ public class NetworkPreferenceFragment extends GAPreferenceFragment {
         port.setSummary(mService.getProxyPort());
         port.setOnPreferenceChangeListener(mListener);
         final Preference torEnabled  = find("tor_enabled");
-        if (Network.GAIT_ONION == null)
+        if (mService.getNetwork().getGaitOnion() == null)
             torEnabled.setEnabled(false);
         else {
-            torEnabled.setSummary(getString(R.string.torSummary, Network.GAIT_ONION));
+            torEnabled.setSummary(getString(R.string.torSummary, mService.getNetwork().getGaitOnion()));
             torEnabled.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(final Preference preference, final Object o) {
