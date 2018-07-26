@@ -2,6 +2,8 @@ package com.greenaddress.greenbits.ui.preferences;
 
 
 import android.annotation.TargetApi;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
@@ -24,6 +26,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import de.schildbach.wallet.ui.ScanActivity;
+
 /**
  * This fragment shows general preferences only. It is used when the
  * activity is showing a two-pane settings UI.
@@ -31,6 +35,8 @@ import java.util.Set;
 @TargetApi(Build.VERSION_CODES.HONEYCOMB)
 public class NetworkPreferenceFragment extends GAPreferenceFragment {
     private static final String TAG = GAPreferenceFragment.class.getSimpleName();
+    private static final int QRSCANNER = 1338;
+    private static final int CAMERA_PERMISSION = 150;
 
     @Override
     public void onCreate(final Bundle savedInstanceState) {
@@ -122,6 +128,15 @@ public class NetworkPreferenceFragment extends GAPreferenceFragment {
             return true;
         });
 
+        final Preference networkCustomAddQr = find("custom_networks_add_qr");
+        networkCustomAddQr.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                onScanClicked();
+                return true;
+            }
+        });
+
         syncCustomNetworks(networkCustomRemove, networkSelector, customNetworks);
 
     }
@@ -155,4 +170,43 @@ public class NetworkPreferenceFragment extends GAPreferenceFragment {
             return true;
         }
     };
+
+    private void onScanClicked() {
+        final String[] perms = { "android.permission.CAMERA" };
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1 &&
+                getActivity().checkSelfPermission(perms[0]) != PackageManager.PERMISSION_GRANTED)
+            requestPermissions(perms, CAMERA_PERMISSION);
+        else {
+            final Intent scanner = new Intent(getActivity(), ScanActivity.class);
+            startActivityForResult(scanner, QRSCANNER);
+        }
+    }
+
+    @Override
+    public void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case QRSCANNER:
+                if (data != null && data.getStringExtra(ScanActivity.INTENT_EXTRA_RESULT) != null) {
+                    String config = data.getStringExtra(ScanActivity.INTENT_EXTRA_RESULT);
+                    Log.d(TAG, "Network config: " + config);
+                }
+                break;
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(final int requestCode, final String[] permissions, final int[] granted) {
+        if (requestCode == CAMERA_PERMISSION &&
+                isPermissionGranted(granted, R.string.err_qrscan_requires_camera_permissions))
+            startActivityForResult(new Intent(getActivity(), ScanActivity.class), QRSCANNER);
+    }
+
+    protected boolean isPermissionGranted(final int[] granted, final int msgId) {
+        if (granted == null || granted.length == 0 || granted[0] != PackageManager.PERMISSION_GRANTED) {
+            UI.toast(getActivity(), msgId, Toast.LENGTH_SHORT);
+            return false;
+        }
+        return true;
+    }
 }
