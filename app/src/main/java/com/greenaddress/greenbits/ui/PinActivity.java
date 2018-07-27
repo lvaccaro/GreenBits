@@ -291,44 +291,9 @@ public class PinActivity extends LoginActivity implements Observer, View.OnClick
     public void onResumeWithService() {
         mService.addConnectionObserver(this);
 
+        chooseNetworkIfMany();
 
-
-
-        final Set<String> networkSelector = mService.cfg().getStringSet("network_selector", new HashSet<>());
-        if (networkSelector.size()>1) {
-            final Set<String> networkSelectorSet = mService.cfg().getStringSet("network_selector", new HashSet<>());
-            final List<String> networkSelectorList = new ArrayList<>(networkSelectorSet);
-            Collections.sort(networkSelectorList);
-
-            final MaterialDialog materialDialog = UI.popup(this, R.string.select_network, R.string.choose, R.string.choose_and_default)
-                    .items(networkSelectorList)
-                    .itemsCallbackSingleChoice(0, (dialog, v, which, text) -> {
-
-                        selectedNetwork(text.toString(), false);
-                        return true;
-                    })
-                    .onNegative((dialog, which) -> {
-                        selectedNetwork(networkSelectorList.get(dialog.getSelectedIndex()), true);
-
-                    })
-                    .build();
-
-            materialDialog.show();
-        }
         super.onResumeWithService();
-    }
-
-    private void selectedNetwork(String which, boolean b) {
-        Log.i("TAG", "which " + which + " default:" + b);
-        final SharedPreferences.Editor editor = mService.cfg().edit();
-        if (b) {
-            Set<String> networkSelectorNew = new HashSet<>();
-            networkSelectorNew.add(which);
-            editor.putStringSet("network_selector", networkSelectorNew);
-        }
-        editor.putString("network_selected", which);
-        editor.apply();
-        mService.updateSelectedNetwork();
     }
 
 

@@ -1,6 +1,16 @@
 package com.greenaddress.greenbits.ui;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.util.Log;
+
+import com.afollestad.materialdialogs.MaterialDialog;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public abstract class LoginActivity extends GaActivity {
 
@@ -23,4 +33,43 @@ public abstract class LoginActivity extends GaActivity {
             onLoginSuccess();
         }
     }
+
+
+    protected void chooseNetworkIfMany() {
+        final Set<String> networkSelector = mService.cfg().getStringSet("network_selector", new HashSet<>());
+        if (networkSelector.size()>1) {
+            final Set<String> networkSelectorSet = mService.cfg().getStringSet("network_selector", new HashSet<>());
+            final List<String> networkSelectorList = new ArrayList<>(networkSelectorSet);
+            Collections.sort(networkSelectorList);
+
+            final MaterialDialog materialDialog = UI.popup(this, R.string.select_network, R.string.choose, R.string.choose_and_default)
+                    .items(networkSelectorList)
+                    .itemsCallbackSingleChoice(0, (dialog, v, which, text) -> {
+
+                        selectedNetwork(text.toString(), false);
+                        return true;
+                    })
+                    .onNegative((dialog, which) -> {
+                        selectedNetwork(networkSelectorList.get(dialog.getSelectedIndex()), true);
+
+                    })
+                    .build();
+
+            materialDialog.show();
+        }
+    }
+
+    protected void selectedNetwork(String which, boolean makeDefault) {
+        Log.i("TAG", "which " + which + " default:" + makeDefault);
+        final SharedPreferences.Editor editor = mService.cfg().edit();
+        if (makeDefault) {
+            Set<String> networkSelectorNew = new HashSet<>();
+            networkSelectorNew.add(which);
+            editor.putStringSet("network_selector", networkSelectorNew);
+        }
+        editor.putString("network_selected", which);
+        editor.apply();
+        mService.updateSelectedNetwork();
+    }
+
 }

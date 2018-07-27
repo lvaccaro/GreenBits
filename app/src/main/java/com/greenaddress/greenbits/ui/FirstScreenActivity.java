@@ -273,6 +273,8 @@ public class FirstScreenActivity extends LoginActivity {
         final boolean userCancelled = mService.getUserCancelledPINEntry();
         mService.setUserCancelledPINEntry(false);
 
+        chooseNetworkIfMany();
+
         //FIXME : recheck state, properly handle TEE link anyway
         if (mService.isLoggedIn()) {
             onLoginSuccess();
