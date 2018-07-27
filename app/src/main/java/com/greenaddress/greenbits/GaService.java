@@ -435,9 +435,13 @@ public class GaService extends Service implements INotificationHandler {
             cfgEdit("service").putString("device_id", mDeviceId).apply();
         }
         final Set<String> networkSelector = cfg().getStringSet("network_selector", new HashSet<>());
+        final String networkSelected = cfg().getString("network_selected", "Bitcoin");
         if (networkSelector.isEmpty()) {
             networkSelector.add("Bitcoin");
-            cfg().edit().putStringSet("network_selector", networkSelector).apply();
+            cfg().edit()
+                    .putString("network_selected", networkSelected)
+                    .putStringSet("network_selector", networkSelector)
+                    .apply();
         }
 
         mClient = new WalletClient(this, mExecutor);
