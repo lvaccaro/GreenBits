@@ -465,6 +465,7 @@ public class GaService extends Service implements INotificationHandler {
             e.printStackTrace();
         }
         Log.i(TAG, "network is "+ network);
+        reconnect();
     }
 
     @Override
